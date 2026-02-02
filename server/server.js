@@ -1,14 +1,22 @@
 import express from 'express';
 import cors from 'cors';
-import 'dotenv/config.js';
+import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
+import connectDB from './config/mongodb.js';
+
+dotenv.config();
 
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+connectDB();
 app.use(cors({credentials: true, origin: 'http://localhost:3000'}));
 app.use(express.json());
 app.use(cookieParser());
+
+app.get('/', (req, res) => {
+  res.send('Hellooo from the server!');
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
