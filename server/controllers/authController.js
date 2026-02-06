@@ -1,6 +1,7 @@
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import UserModel from '../models/userModel.js';
+import transporter from '../config/nodemailer.js';
 
 export const registerUser = async (req, res) => {
   try {
@@ -23,6 +24,14 @@ export const registerUser = async (req, res) => {
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
             maxAge: 4 * 24 * 60 * 60 * 1000, // 4 days
         } )
+        // Send welcome email
+        const mailOptions = {
+          from: process.env.SENDER_EMAIL,
+          to: email,
+          subject: 'Welcome to Our App!',
+          text: `Hi ${name},\n\nThank you for registering at our app! We're excited to have you on board.\n\nBest regards,\nThe Team`
+        };
+        await transporter.sendMail(mailOptions);
         return res.json({ success: true, message: 'User registered successfully' });                        
     }
     catch(err){
@@ -77,5 +86,33 @@ export const logout = async (req, res) => {
   }
   catch(err){
     return res.json({ success: false, message: 'Error during logout' });
+  }
+}
+//send OTP to user email for verification
+export const sendVerifyOtp = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.json({ success: false, message: 'User not found' });
+    }
+    if (user.isVerified) {
+      return res.json({ success: false, message: 'User already verified' });
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.verifyOtp = otp;
+    user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
+    await user.save();
+    const mailOptions = {
+      from: process.env.SENDER_EMAIL,
+      to: user.email,
+      subject: 'Your OTP for Email Verification',
+      text: `Hi ${user.name},\n\nYour OTP for email verification is: ${otp}\n\nThis OTP is valid for 10 minutes.\n\nBest regards,\nThe Team`
+    };
+    await transporter.sendMail(mailOptions);
+    return res.json({ success: true, message: 'OTP sent to email' });
+  }
+  catch(err){
+    return res.json({ success: false, message: 'Error sending OTP' });
   }
 }
