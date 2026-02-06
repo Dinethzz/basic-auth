@@ -143,3 +143,67 @@ export const verifyEmail = async (req, res) => {
       return res.json({ success: false, message: 'Server error' });
     }
 }
+
+export const isAuthenticated = async (req, res) => {
+  try {
+    return res.json({ success: true, message: 'User is authenticated' });
+  }catch(error){
+    return res.json({ success: false, message: 'Server error' });
+  }
+}
+
+//send password reset OTP to user email
+export const sendRestOtp = async (req, res) => {
+    const { email } = req.body;
+    if (!email) {
+      return res.json({ success: false, message: 'Email is required' });
+    }
+    try {
+      const user = await UserModel.findOne({ email });
+      if (!user) {
+        return res.json({ success: false, message: 'User not found' });
+      }
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      user.resetOtp = otp;
+      user.resetOtpExpireAt = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
+      await user.save();
+      const mailOptions = {
+        from: process.env.SENDER_EMAIL,
+        to: user.email,
+        subject: 'Your OTP for Password Reset',
+        text: `Hi ${user.name},\n\nYour OTP for password reset is: ${otp}\n\nThis OTP is valid for 10 minutes.\n\nBest regards,\nThe Team`
+      };
+      await transporter.sendMail(mailOptions);
+      return res.json({ success: true, message: 'OTP sent to email' });
+    }
+    catch (err) {
+      return res.json({ success: false, message: 'Server error' });
+    }
+}
+
+//reset user password after verifying OTP
+export const resetPassword = async (req, res) => {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+      return res.json({ success: false, message: 'All fields are required' });
+    }
+    try {
+      const user = await UserModel.findOne({ email });
+      if (!user) {
+        return res.json({ success: false, message: 'User not found' });
+      }
+      if (user.resetOtp === '' || user.resetOtp !== otp) {
+        return res.json({ success: false, message: 'Invalid OTP' });
+      }
+      if (user.resetOtpExpireAt < Date.now()) {
+        return res.json({ success: false, message: 'OTP expired' });
+      }
+      user.password = newPassword;
+      user.resetOtp = '';
+      user.resetOtpExpireAt = null;
+      await user.save();
+      return res.json({ success: true, message: 'Password reset successfully' });
+    }catch (err) {
+      return res.json({ success: false, message: 'Server error' });
+    }
+}
