@@ -14,10 +14,12 @@ const Login = () => {
         <h2 className='text-3xl font-semibold text-white text-center mb-3'>{state === 'signup' ? 'Create new Account' : 'Login'}</h2>
         <p className='text-center text-sm mb-6'>{state === 'signup' ? 'Please fill in the form to create an account.' : 'Please enter your credentials to login.'}</p>
         <form>
-          <div className='mb-4 flex items-center gap-3 border border-gray-300 rounded-full px-5 py-2.5 bg-[#333A5C]'>
-            <img src={assets.person_icon} alt="Person Icon" />
-            <input className='bg-transparent outline-none' type="text" placeholder='Username' required/>
-          </div>
+          {state === 'signup' && (
+            <div className='mb-4 flex items-center gap-3 border border-gray-300 rounded-full px-5 py-2.5 bg-[#333A5C]'>
+              <img src={assets.person_icon} alt="Person Icon" />
+              <input className='bg-transparent outline-none' type="text" placeholder='Username' required/>
+            </div>
+          )}
           <div className='mb-4 flex items-center gap-3 border border-gray-300 rounded-full px-5 py-2.5 bg-[#333A5C]'>
             <img src={assets.mail_icon} alt="Mail Icon" />
             <input className='bg-transparent outline-none' type="email" placeholder='Email' required/>
@@ -29,7 +31,7 @@ const Login = () => {
           <p className='mb-4 text-indigo-500 cursor-pointer'>Forgot password?</p>
           <button className='w-full py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-900 text-white font-medium'>{state}</button>
         </form>
-        <p className='text-gray-400 text-center text-xs mt-4'>Already have an account?{' '}<span className='text-blue-400 cursor-pointer underline'>Login here</span></p>
+        {state === 'signup' ? (<p className='text-gray-400 text-center text-xs mt-4'>Already have an account?{' '}<span onClick={() => setState('login')} className='text-blue-400 cursor-pointer underline'>Login here</span></p>) : (<p className='text-gray-400 text-center text-xs mt-4'>Don't have an account?{' '}<span onClick={() => setState('signup')} className='text-blue-400 cursor-pointer underline'>Sign up</span></p>)} 
       </div>
     </div>
   )
