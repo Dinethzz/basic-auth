@@ -1,17 +1,43 @@
-import React, { createContext } from 'react'
+import { get } from 'http';
+import { set } from 'mongoose';
+import React, { createContext, useEffect } from 'react'
+import { toast } from 'react-toastify';
 
 export const AppContent = createContext();
 
 export const AppContextProvider = (props) => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
-    const [isLoggedin, setIsLoggedin] = React.useState(false);
-    const [userData, setUserData] = React.useState(null);
+    const [isLoggedin, setIsLoggedin] = useState(false);
+    const [userData, setUserData] = useState(false);
+    const getAuthState = async () => {
+        try{
+            const {data} = await axios.get(backendUrl + '/api/auth/is-auth');
+            if(data.success){
+                setIsLoggedin(true);
+                getUserData();
+            }
+        }catch(err){
+            toast.error(err.message);
+        }
+    }
+    const getUserData = async () => {
+        try{
+            const {data} = await axios.get(backendUrl + 'api/user/data');
+            data.success ? setUserData(data.userData) : toast.error(data.message);
+        }catch(err){
+            toast.error(err.message);
+        }
+    }
+    useEffect(() => {
+        getAuthState();
+    }, [])
     const value = {
         backendUrl,
         isLoggedin,
         setIsLoggedin,
         userData,
-        setUserData
+        setUserData,
+        getUserData
     }
     return (
         <AppContent.Provider value={value}>

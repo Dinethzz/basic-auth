@@ -12,7 +12,8 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 connectDB();
-app.use(cors({credentials: true, origin: 'http://localhost:4000'}));
+const allowedOrigins = ['http://localhost:4000', 'http://localhost:5173'];
+app.use(cors({origin: allowedOrigins, credentials: true}));
 app.use(express.json());
 app.use(cookieParser());
 
