@@ -1,8 +1,11 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { assets } from '../assets/assets'
+import axios from 'axios';
 
 const ResetPassword = () => {
+  const  {backendurl} = useContext(AppContent);
+  axios.defaults.withCredentials = true;
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -29,12 +32,46 @@ const ResetPassword = () => {
         }
     })
     }
+
+    const onSubmitEmail = async (e) => {
+      e.preventDefault();
+      try{
+        const {data} = await axios.post(backendUrl + '/api/auth/send-reset-otp', { email });
+        data.success ? toast.success(data.message) : toast.error(data.message);
+        data.success && setIsEmailSent(true);
+      }catch(err){
+        toast.error(err.message);
+      }
+    }
+
+    const onSubmitOtp = async (e) => {
+      e.preventDefault();
+      try{
+        const otpArray = inputRefs.current.map(e => e.value);
+        setOtp(otpArray.join(''));
+        setIsOtpSubmitted(true);
+      }catch(err){
+        toast.error(err.message);
+      }
+    }
+
+    const onSubmitNewPassword = async (e) => {
+      e.preventDefault();
+      try{
+        const {data} = await axios.post(backendUrl + '/api/auth/reset-password', { email, otp, newPassword });
+        data.success ? toast.success(data.message) : toast.error(data.message);
+        data.success && navigate('/login');
+      }catch(err){
+        toast.error(err.message);
+      }
+    }
+
   return (
     <div className='flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-200 to-purple-400'>
       <img onClick={() => navigate('/')} src={assets.logo} className='absolute left-5 sm:left-20 top-5 w-28 sm:w-32 cursor-pointer' />
       {/* enter email id */}
       {!isEmailSent && 
-      <form className='bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm'>
+      <form onSubmit={onSubmitEmail} className='bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm'>
         <h1 className='text-white text-2xl font-semibold mb-4 text-center'>
           Reset Password
         </h1>
@@ -48,7 +85,7 @@ const ResetPassword = () => {
 }
       {/* otp input form */}
       {!isOtpSubmitted && isEmailSent && 
-      <form className='bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm'>
+      <form onSubmit={onSubmitOtp} className='bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm'>
         <h1 className='text-white text-2xl font-semibold mb-4 text-center'>
           Reset password OTP
         </h1>
@@ -67,7 +104,7 @@ const ResetPassword = () => {
 
       {/*enter new password */}
         {isOtpSubmitted && isEmailSent &&
-      <form className='bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm'>
+      <form onSubmit={onSubmitNewPassword} className='bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm'>
         <h1 className='text-white text-2xl font-semibold mb-4 text-center'>
           New Password
         </h1>
